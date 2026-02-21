@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "Refresh Document API",
+  "name_for_model": "refresh_api",
+  "description_for_human": "Search OneDrive, analyze document families, and generate updated documents",
+  "description_for_model": "API for searching a user's OneDrive for document families, performing cross-document comparative analysis, generating new document versions grounded in historical patterns and organizational context, and saving results back to OneDrive.",
+  "auth": {
+    "type": "OAuthPluginVault",
+    "reference_id": "refresh_api_oauth"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "openapi.yaml"
+  },
+  "functions": [
+    {
+      "name": "extractSearchIntent",
+      "description": "Analyze a user's natural language request to determine what type of document they need and generate search keywords for finding previous versions and organizational context documents"
+    },
+    {
+      "name": "searchOneDrive",
+      "description": "Search the user's OneDrive for documents matching the provided keywords. Returns a list of matching files with metadata including name, path, web URL, creation date, and modification date"
+    },
+    {
+      "name": "retrieveAndAnalyze",
+      "description": "Download multiple documents from OneDrive by their IDs and perform cross-document comparative analysis to identify stable elements, variable elements, and emerging patterns across document versions"
+    },
+    {
+      "name": "generateFromSynthesis",
+      "description": "Generate a new document version based on comparative family analysis, incorporating organizational context, historical patterns, and user-requested changes"
+    },
+    {
+      "name": "saveToOneDrive",
+      "description": "Save a generated document to the user's OneDrive Refresh folder or specified location"
+    }
+  ],
+  "capabilities": {
+    "localization": {
+      "default_language": "en-us"
+    }
+  }
+}
