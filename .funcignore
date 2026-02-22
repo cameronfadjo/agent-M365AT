@@ -1,0 +1,33 @@
+# Azure Functions ignore file
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local settings (don't deploy)
+local.settings.json
+
+# Testing
+*test*.py
+tests/
+
+# Documentation
+*.md
+
+# Git
+.git/
+.gitignore
