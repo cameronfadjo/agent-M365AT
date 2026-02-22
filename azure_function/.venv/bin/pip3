@@ -1,0 +1,6 @@
+#!/Users/cameronfadjo/Documents/Dev/agent-M365AT/azure_function/.venv/bin/python3.11
+import sys
+from pip._internal.cli.main import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
