@@ -1,0 +1,48 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "OneDrive Search Results",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(count, string(count) + ' document(s) found', 'No documents found')}",
+      "wrap": true,
+      "spacing": "Small"
+    },
+    {
+      "type": "Container",
+      "$data": "${documents}",
+      "spacing": "Small",
+      "separator": true,
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${name}",
+          "weight": "Bolder",
+          "size": "Small",
+          "wrap": true
+        },
+        {
+          "type": "FactSet",
+          "facts": [
+            {
+              "title": "Path",
+              "value": "${if(path, path, 'N/A')}"
+            },
+            {
+              "title": "Modified",
+              "value": "${if(lastModified, lastModified, 'N/A')}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

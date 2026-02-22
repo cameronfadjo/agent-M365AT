@@ -1,0 +1,59 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Search Intent Extracted",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Document Type",
+          "value": "${if(document_type, document_type, 'N/A')}"
+        },
+        {
+          "title": "Confidence",
+          "value": "${if(confidence, string(int(multiply(confidence, 100))) + '%', 'N/A')}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(summary, summary, '')}",
+      "wrap": true,
+      "spacing": "Small"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Search Terms",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(search_terms, join(search_terms, ', '), 'None')}",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Context Search Terms",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium",
+      "$when": "${count(context_search_terms) > 0}"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(context_search_terms, join(context_search_terms, ', '), '')}",
+      "wrap": true,
+      "$when": "${count(context_search_terms) > 0}"
+    }
+  ]
+}

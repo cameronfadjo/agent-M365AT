@@ -1,0 +1,38 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Document Saved to OneDrive",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Saved Path",
+          "value": "${if(savedPath, savedPath, 'N/A')}"
+        },
+        {
+          "title": "Item ID",
+          "value": "${if(itemId, itemId, 'N/A')}"
+        }
+      ]
+    },
+    {
+      "type": "ActionSet",
+      "actions": [
+        {
+          "type": "Action.OpenUrl",
+          "title": "Open in OneDrive",
+          "url": "${if(webUrl, webUrl, '')}",
+          "$when": "${webUrl != null && webUrl != ''}"
+        }
+      ]
+    }
+  ]
+}

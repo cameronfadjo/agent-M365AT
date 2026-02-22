@@ -1,0 +1,82 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Document Generated",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Filename",
+          "value": "${if(filename, filename, 'N/A')}"
+        },
+        {
+          "title": "Expires In",
+          "value": "${if(expires_in_hours, string(expires_in_hours) + ' hours', 'N/A')}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Changes Applied",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium",
+      "$when": "${count(changes_applied) > 0}"
+    },
+    {
+      "type": "Container",
+      "$data": "${changes_applied}",
+      "$when": "${count(changes_applied) > 0}",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "- ${$data}",
+          "wrap": true,
+          "size": "Small"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Flags for Review",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium",
+      "color": "Attention",
+      "$when": "${count(flags) > 0}"
+    },
+    {
+      "type": "Container",
+      "$data": "${flags}",
+      "$when": "${count(flags) > 0}",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "**${field}**: ${reason}",
+          "wrap": true,
+          "size": "Small",
+          "color": "Attention"
+        }
+      ]
+    },
+    {
+      "type": "ActionSet",
+      "actions": [
+        {
+          "type": "Action.OpenUrl",
+          "title": "Download Document",
+          "url": "${if(download_url, download_url, '')}",
+          "$when": "${download_url != null && download_url != ''}"
+        }
+      ]
+    }
+  ]
+}

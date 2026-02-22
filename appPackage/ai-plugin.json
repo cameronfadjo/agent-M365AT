@@ -1,0 +1,127 @@
+{
+  "$schema_version": "v2.2",
+  "name_for_human": "Refresh Document API",
+  "description_for_human": "Search OneDrive, analyze document families, and generate updated documents",
+  "namespace": "refreshApi",
+  "functions": [
+    {
+      "name": "extractSearchIntent",
+      "description": "Analyze a user's natural language request to determine what type of document they need and generate search keywords for finding previous versions and organizational context documents",
+      "capabilities": {
+        "response_semantics": {
+          "data_path": "$",
+          "properties": {
+            "title": {
+              "static_value": "Search Intent Extracted"
+            },
+            "subtitle": {
+              "json_path": "$.summary"
+            }
+          },
+          "static_template": {
+            "$ref": "adaptiveCards/extractSearchIntent.json"
+          }
+        }
+      }
+    },
+    {
+      "name": "searchOneDrive",
+      "description": "Search the user's OneDrive for documents matching the provided keywords. Returns a list of matching files with metadata including name, path, web URL, creation date, and modification date",
+      "capabilities": {
+        "response_semantics": {
+          "data_path": "$",
+          "properties": {
+            "title": {
+              "static_value": "OneDrive Search Results"
+            },
+            "subtitle": {
+              "json_path": "$.count"
+            }
+          },
+          "static_template": {
+            "$ref": "adaptiveCards/searchOneDrive.json"
+          }
+        }
+      }
+    },
+    {
+      "name": "retrieveAndAnalyze",
+      "description": "Download multiple documents from OneDrive by their IDs and perform cross-document comparative analysis to identify stable elements, variable elements, and emerging patterns across document versions",
+      "capabilities": {
+        "response_semantics": {
+          "data_path": "$",
+          "properties": {
+            "title": {
+              "static_value": "Document Family Analysis"
+            },
+            "subtitle": {
+              "json_path": "$.summary"
+            }
+          },
+          "static_template": {
+            "$ref": "adaptiveCards/retrieveAndAnalyze.json"
+          }
+        }
+      }
+    },
+    {
+      "name": "generateFromSynthesis",
+      "description": "Generate a new document version based on comparative family analysis, incorporating organizational context, historical patterns, and user-requested changes",
+      "capabilities": {
+        "response_semantics": {
+          "data_path": "$",
+          "properties": {
+            "title": {
+              "static_value": "Document Generated"
+            },
+            "subtitle": {
+              "json_path": "$.filename"
+            }
+          },
+          "static_template": {
+            "$ref": "adaptiveCards/generateFromSynthesis.json"
+          }
+        }
+      }
+    },
+    {
+      "name": "saveToOneDrive",
+      "description": "Save a generated document to the user's OneDrive Refresh folder or specified location",
+      "capabilities": {
+        "response_semantics": {
+          "data_path": "$",
+          "properties": {
+            "title": {
+              "static_value": "Document Saved"
+            },
+            "subtitle": {
+              "json_path": "$.savedPath"
+            }
+          },
+          "static_template": {
+            "$ref": "adaptiveCards/saveToOneDrive.json"
+          }
+        }
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "type": "OpenApi",
+      "auth": {
+        "type": "OAuthPluginVault",
+        "reference_id": "${{OAUTH2_REGISTRATION_ID}}"
+      },
+      "spec": {
+        "url": "apiSpecificationFile/openapi.yaml"
+      },
+      "run_for_functions": [
+        "extractSearchIntent",
+        "searchOneDrive",
+        "retrieveAndAnalyze",
+        "generateFromSynthesis",
+        "saveToOneDrive"
+      ]
+    }
+  ]
+}

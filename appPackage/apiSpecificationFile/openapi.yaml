@@ -1,0 +1,496 @@
+openapi: 3.0.0
+info:
+  title: Refresh Document API
+  description: Search OneDrive, analyze document families, and generate updated documents for K-12 school districts
+  version: 1.0.0
+  contact:
+    name: CDW Education
+    url: https://cdw.com
+
+servers:
+  - url: ${{AZURE_FUNCTION_URL}}/api
+    description: Azure Function API endpoint
+
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: OAuth 2.0 authorization code flow to access Microsoft Graph
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/${{ENTRA_TENANT_ID}}/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/${{ENTRA_TENANT_ID}}/oauth2/v2.0/token
+          scopes:
+            https://graph.microsoft.com/.default: Full access to Microsoft Graph API
+
+  schemas:
+    ExtractSearchIntentRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: The user's natural language request describing the document they need
+
+    ExtractSearchIntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the intent extraction succeeded
+        document_type:
+          type: string
+          description: The inferred type of document (e.g., letter, memo, policy, form)
+        search_terms:
+          type: array
+          items:
+            type: string
+          description: Primary search terms for finding previous document versions
+        context_search_terms:
+          type: array
+          items:
+            type: string
+          description: Secondary search terms for finding organizational context documents
+        summary:
+          type: string
+          description: Summary of the extracted intent
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the intent extraction
+
+    SearchOneDriveRequest:
+      type: object
+      required:
+        - search_terms
+      properties:
+        search_terms:
+          type: string
+          description: Space-separated keywords to search for in OneDrive
+
+    DocumentMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the document in OneDrive
+        name:
+          type: string
+          description: File name including extension
+        path:
+          type: string
+          description: Full path to the document in OneDrive
+        webUrl:
+          type: string
+          format: uri
+          description: Web URL to access the document in OneDrive
+        lastModified:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of last modification
+        createdDateTime:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of document creation
+        size:
+          type: integer
+          description: File size in bytes
+
+    SearchOneDriveResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the search succeeded
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentMetadata'
+          description: List of documents matching the search terms
+        count:
+          type: integer
+          description: Total number of documents found
+
+    RetrieveAndAnalyzeRequest:
+      type: object
+      required:
+        - document_ids
+      properties:
+        document_ids:
+          type: array
+          items:
+            type: string
+          description: OneDrive document IDs to retrieve and analyze
+        context_document_ids:
+          type: array
+          items:
+            type: string
+          description: Optional document IDs for organizational context
+        user_context:
+          type: string
+          description: The user's request or any additional context for analysis
+
+    AnalysisObject:
+      type: object
+      description: Cross-document comparative analysis results
+      properties:
+        stable_elements:
+          type: object
+          description: Document sections that remain consistent across versions
+        variable_elements:
+          type: object
+          description: Sections that change year to year with identified patterns
+        emerging_elements:
+          type: array
+          items:
+            type: string
+          description: New sections or content patterns found in recent versions
+
+    RetrieveAndAnalyzeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the analysis succeeded
+        family_type:
+          type: string
+          description: Categorized document family type (e.g., letter, memo, form)
+        family_type_display:
+          type: string
+          description: Human-readable display name for the family type
+        document_count:
+          type: integer
+          description: Number of documents analyzed
+        date_range:
+          type: string
+          description: Range of dates covered by analyzed documents
+        analysis:
+          $ref: '#/components/schemas/AnalysisObject'
+          description: Detailed cross-document comparative analysis
+        recommended_base:
+          type: string
+          description: ID of the recommended document to use as base for generation
+        base_document_text:
+          type: string
+          description: Full text content of the recommended base document
+        organizational_context:
+          type: string
+          description: Summary of organizational changes found in context documents
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the analysis
+        summary:
+          type: string
+          description: High-level summary of findings
+
+    GenerateFromSynthesisRequest:
+      type: object
+      required:
+        - family_analysis
+        - base_document_text
+      properties:
+        family_analysis:
+          $ref: '#/components/schemas/AnalysisObject'
+          description: The comparative analysis object from retrieve-and-analyze
+        base_document_text:
+          type: string
+          description: Full text of the base document to use as foundation
+        organizational_context:
+          type: string
+          description: Summary of organizational context and changes
+        user_changes:
+          type: string
+          description: User-requested modifications to apply to the new document
+        target_year:
+          type: string
+          description: Target year or date for the generated document
+
+    GenerationFlag:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Name of the field or section that needs review
+        reason:
+          type: string
+          description: Explanation of why this field is flagged
+        current_placeholder:
+          type: string
+          description: The placeholder text currently in the document
+
+    GenerateFromSynthesisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether document generation succeeded
+        generated_text:
+          type: string
+          description: Full text of the generated document
+        changes_applied:
+          type: array
+          items:
+            type: string
+          description: List of changes that were applied to the document
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenerationFlag'
+          description: Fields or sections that require manual review
+        filename:
+          type: string
+          description: Suggested filename for the generated document
+        download_url:
+          type: string
+          format: uri
+          description: Temporary download link for the generated document
+        expires_in_hours:
+          type: integer
+          description: Number of hours before the download link expires
+        storage_type:
+          type: string
+          enum: [temp, onedrive]
+          description: Where the generated file is currently stored
+
+    SaveToOneDriveRequest:
+      type: object
+      required:
+        - download_url
+        - filename
+      properties:
+        download_url:
+          type: string
+          format: uri
+          description: Download URL of the generated document to save
+        filename:
+          type: string
+          description: Target filename for the saved document
+        folder_path:
+          type: string
+          description: Optional OneDrive folder path where document should be saved
+
+    SaveToOneDriveResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the save operation succeeded
+        savedPath:
+          type: string
+          description: Full path to the saved document in OneDrive
+        webUrl:
+          type: string
+          format: uri
+          description: Web URL to access the saved document
+        itemId:
+          type: string
+          description: OneDrive item ID of the saved document
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          description: Error message
+        details:
+          type: string
+          description: Additional error details
+
+security:
+  - oauth2:
+      - https://graph.microsoft.com/.default
+
+paths:
+  /extract-search-intent:
+    post:
+      summary: Extract search intent from user request
+      description: Analyze a user's natural language request to determine document type and generate search keywords
+      operationId: extractSearchIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractSearchIntentRequest'
+      responses:
+        '200':
+          description: Intent successfully extracted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractSearchIntentResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error during intent extraction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search-onedrive:
+    post:
+      summary: Search OneDrive for documents
+      description: Search the user's OneDrive for documents matching the provided keywords
+      operationId: searchOneDrive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchOneDriveRequest'
+      responses:
+        '200':
+          description: Search completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchOneDriveResponse'
+        '400':
+          description: Invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error during search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /retrieve-and-analyze:
+    post:
+      summary: Retrieve and analyze document family
+      description: Download multiple documents and perform cross-document comparative analysis
+      operationId: retrieveAndAnalyze
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetrieveAndAnalyzeRequest'
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrieveAndAnalyzeResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: One or more documents not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error during analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /generate-from-synthesis:
+    post:
+      summary: Generate new document from analysis
+      description: Create a new document version based on comparative family analysis and organizational context
+      operationId: generateFromSynthesis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateFromSynthesisRequest'
+      responses:
+        '200':
+          description: Document generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateFromSynthesisResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error during generation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /save-to-onedrive:
+    post:
+      summary: Save generated document to OneDrive
+      description: Save a generated document to the user's OneDrive
+      operationId: saveToOneDrive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveToOneDriveRequest'
+      responses:
+        '200':
+          description: Document saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveToOneDriveResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error during save operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

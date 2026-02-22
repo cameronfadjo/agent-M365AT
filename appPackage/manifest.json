@@ -1,0 +1,51 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.19",
+  "id": "${{TEAMS_APP_ID}}",
+  "version": "6.0.0",
+  "packageName": "com.cdw.refresh.agent",
+  "name": {
+    "short": "Refresh Agent${{APP_NAME_SUFFIX}}",
+    "full": "Refresh Document Research and Generation Agent"
+  },
+  "description": {
+    "short": "Research and generate updated school district documents",
+    "full": "Refresh Agent helps K-12 educators create updated versions of recurring documents by analyzing previous versions in OneDrive, discovering relevant organizational changes, and generating new versions grounded in document history and context."
+  },
+  "developer": {
+    "name": "CDW Education",
+    "websiteUrl": "https://cdw.com",
+    "privacyUrl": "https://cdw.com/privacy",
+    "termsOfUseUrl": "https://cdw.com/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#1B3A5C",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "declarativeAgent",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  },
+  "validDomains": [
+    "${{AZURE_FUNCTION_DOMAIN}}"
+  ],
+  "webApplicationInfo": {
+    "id": "${{ENTRA_CLIENT_ID}}",
+    "resource": "api://${{AZURE_FUNCTION_DOMAIN}}/${{ENTRA_CLIENT_ID}}"
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "ChannelMessage.Read.Group",
+          "type": "Application"
+        }
+      ]
+    }
+  }
+}

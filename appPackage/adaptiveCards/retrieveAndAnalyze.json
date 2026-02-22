@@ -1,0 +1,55 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Document Family Analysis",
+      "weight": "Bolder",
+      "size": "Medium",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Family Type",
+          "value": "${if(family_type_display, family_type_display, 'N/A')}"
+        },
+        {
+          "title": "Documents Analyzed",
+          "value": "${if(document_count, string(document_count), 'N/A')}"
+        },
+        {
+          "title": "Date Range",
+          "value": "${if(date_range, date_range, 'N/A')}"
+        },
+        {
+          "title": "Confidence",
+          "value": "${if(confidence, string(int(multiply(confidence, 100))) + '%', 'N/A')}"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(summary, summary, '')}",
+      "wrap": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Organizational Context",
+      "weight": "Bolder",
+      "size": "Small",
+      "spacing": "Medium",
+      "$when": "${organizational_context != null && organizational_context != ''}"
+    },
+    {
+      "type": "TextBlock",
+      "text": "${if(organizational_context, organizational_context, '')}",
+      "wrap": true,
+      "$when": "${organizational_context != null && organizational_context != ''}"
+    }
+  ]
+}
