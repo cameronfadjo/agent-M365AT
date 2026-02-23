@@ -87,7 +87,7 @@ Fee waivers or assistance info
 
 # 5. Forms & Permission
 ## Purpose: Formal consent, acknowledgment, or legally required notification.
-### inancial & Administrative
+### Financial & Administrative
 Media release forms
 
 
