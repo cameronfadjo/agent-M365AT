@@ -1,7 +1,6 @@
-1. Updates & Announcements
-Purpose: Provide updates, context, or general information.
-Parent Action: Usually none (optional engagement).
-School-Wide Announcements
+# 1. Updates & Announcements
+## Purpose: Provide updates, context, or general information.
+### School-Wide Announcements
 Back-to-school communications
 
 
@@ -17,7 +16,7 @@ Policy changes
 Holiday greetings
 
 
-Technology & Digital Systems
+### Technology & Digital Systems
 Parent portal updates
 
 
@@ -34,13 +33,13 @@ Testing platform instructions
 
 
 
-2. Action Required
-Purpose: Parent must complete a step, submit something, or respond.
-School-Wide Announcements
+# 2. Action Required
+## Purpose: Parent must complete a step, submit something, or respond.
+### School-Wide Announcements
 Survey requests (climate, satisfaction)
 
 
-Logistics & Operations
+### Logistics & Operations
 Technology distribution notices
 
 
@@ -50,7 +49,7 @@ Device care reminders
 App or platform onboarding instructions
 
 
-Technology & Digital Systems
+### Technology & Digital Systems
 Account creation instructions
 
 
@@ -58,13 +57,13 @@ LMS notifications (when tied to required tasks)
 
 
 
-3. Account & Access
-Purpose: Enable the parent/student to use systems or maintain operational access.
-Logistics & Operations
+# 3. Account & Access
+## Purpose: Enable the parent/student to use systems or maintain operational access.
+### Logistics & Operations
 Password reset instructions
 
 
-Technology & Digital Systems
+### Technology & Digital Systems
 Password reset notices
 
 
@@ -75,20 +74,20 @@ Testing platform instructions (setup-related)
 
 
 
-4. Payments & Fees
-Purpose: Money, eligibility, or financial administration.
-Logistics & Operations
+# 4. Payments & Fees
+## Purpose: Money, eligibility, or financial administration.
+### Logistics & Operations
 Fee reminders
 
 
-Financial & Administrative
+### Financial & Administrative
 Fee waivers or assistance info
 
 
 
-5. Forms & Permission
-Purpose: Formal consent, acknowledgment, or legally required notification.
-Financial & Administrative
+# 5. Forms & Permission
+## Purpose: Formal consent, acknowledgment, or legally required notification.
+### inancial & Administrative
 Media release forms
 
 
@@ -101,14 +100,14 @@ Code of conduct acknowledgements
 Annual policy sign-offs
 
 
-Technology & Digital Systems
+### Technology & Digital Systems
 Acceptable use policy reminders
 
 
 Data privacy notices
 
 
-Compliance & Legal
+### Compliance & Legal
 FERPA notices
 
 
