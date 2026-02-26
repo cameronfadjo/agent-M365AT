@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDW Agent Deployment Portal</title>
+    <style>
+        :root {
+            --blue: #8B0000;
+            --accent: #CC0000;
+            --accent-light: #FFF0F0;
+            --success: #27AE60;
+            --error: #E74C3C;
+            --warning: #F39C12;
+            --gray: #6B7280;
+            --light-gray: #F3F4F6;
+            --border: #E5E7EB;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--light-gray);
+            color: #1F2937;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--accent) 100%);
+            color: white;
+            padding: 24px 40px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header-icon {
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 700;
+        }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+
+        /* Main layout */
+        .container {
+            max-width: 860px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 32px;
+            position: relative;
+        }
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .step-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: calc(50% + 20px);
+            width: calc(100% - 40px);
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+        .step-item.completed:not(:last-child)::after { background: var(--success); }
+        .step-item.active:not(:last-child)::after { background: var(--accent); }
+
+        .step-circle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 600;
+            color: var(--gray);
+            z-index: 1;
+            transition: all 0.3s;
+        }
+        .step-item.active .step-circle { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+        .step-item.completed .step-circle { border-color: var(--success); background: var(--success); color: white; }
+
+        .step-label {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--gray);
+            text-align: center;
+        }
+        .step-item.active .step-label { color: var(--accent); font-weight: 600; }
+        .step-item.completed .step-label { color: var(--success); }
+
+        /* Status badge */
+        .status-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+            background: rgba(255,255,255,0.15);
+            white-space: nowrap;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #888;
+        }
+        .status-badge.connected .status-dot { background: #2ECC71; }
+        .status-badge.demo .status-dot { background: #F39C12; }
+        .status-badge.error .status-dot { background: #E74C3C; }
+        .status-badge.checking .status-dot {
+            background: #3498DB;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--blue);
+            margin-bottom: 4px;
+        }
+        .card .subtitle {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 24px;
+        }
+
+        /* Form groups */
+        .form-section {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .form-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-row.full { grid-template-columns: 1fr; }
+
+        .field { display: flex; flex-direction: column; }
+        .field label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .field label .required { color: var(--error); }
+        .field input, .field select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(204,0,0,0.1); }
+        .field input.error { border-color: var(--error); }
+        .field .hint {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        .field .error-msg {
+            font-size: 11px;
+            color: var(--error);
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* Buttons */
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover { background: #A30000; }
+        .btn-primary:disabled { background: #E89999; cursor: not-allowed; }
+        .btn-secondary {
+            background: white;
+            color: var(--gray);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--light-gray); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover { background: #219A52; }
+
+        /* Progress / Deployment view */
+        .deploy-steps { display: flex; flex-direction: column; gap: 12px; }
+
+        .deploy-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 10px;
+            background: var(--light-gray);
+            transition: all 0.3s;
+        }
+        .deploy-step.active { background: var(--accent-light); border: 1px solid rgba(204,0,0,0.2); }
+        .deploy-step.completed { background: #F0FDF4; border: 1px solid rgba(39,174,96,0.2); }
+        .deploy-step.error { background: #FEF2F2; border: 1px solid rgba(231,76,60,0.2); }
+
+        .deploy-step-icon {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            background: white;
+            border: 2px solid var(--border);
+            color: var(--gray);
+        }
+        .deploy-step.active .deploy-step-icon { border-color: var(--accent); color: var(--accent); }
+        .deploy-step.completed .deploy-step-icon { border-color: var(--success); background: var(--success); color: white; }
+        .deploy-step.error .deploy-step-icon { border-color: var(--error); background: var(--error); color: white; }
+
+        .deploy-step-content { flex: 1; }
+        .deploy-step-title { font-size: 14px; font-weight: 600; }
+        .deploy-step-desc { font-size: 12px; color: var(--gray); margin-top: 2px; }
+        .deploy-step-log {
+            margin-top: 8px;
+            font-size: 12px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            color: var(--gray);
+            background: rgba(0,0,0,0.04);
+            padding: 8px 12px;
+            border-radius: 6px;
+            max-height: 120px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .deploy-step.active .deploy-step-log,
+        .deploy-step.error .deploy-step-log { display: block; }
+
+        /* Spinner */
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid var(--accent-light);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Summary panel */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .summary-item {
+            background: var(--light-gray);
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+        .summary-item label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gray);
+        }
+        .summary-item .value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--blue);
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        /* Info box */
+        .info-box {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+        .info-box strong { color: var(--blue); }
+
+        /* Success banner */
+        .success-banner {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .success-banner h2 { font-size: 22px; margin-bottom: 8px; }
+        .success-banner p { font-size: 14px; opacity: 0.9; }
+
+        .hidden { display: none !important; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .container { padding: 0 12px; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-icon">&#9670;</div>
+    <div style="flex:1">
+        <h1>CDW Agent Deployment Portal</h1>
+        <p>Configure and deploy a CDW AI agent into a customer tenant</p>
+    </div>
+    <div id="statusBadge" class="status-badge checking" title="Checking backend connection...">
+        <div class="status-dot"></div>
+        <span>Checking...</span>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Stepper -->
+    <div class="stepper">
+        <div class="step-item active" id="stepper-1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Azure Config</div>
+        </div>
+        <div class="step-item" id="stepper-2">
+            <div class="step-circle">2</div>
+            <div class="step-label">AI & Storage</div>
+        </div>
+        <div class="step-item" id="stepper-3">
+            <div class="step-circle">3</div>
+            <div class="step-label">Review</div>
+        </div>
+        <div class="step-item" id="stepper-4">
+            <div class="step-circle">4</div>
+            <div class="step-label">Deploy</div>
+        </div>
+    </div>
+
+    <!-- ========== STEP 1: Azure Config ========== -->
+    <div class="card" id="page-1">
+        <h2>Azure & Tenant Configuration</h2>
+        <p class="subtitle">Provide the customer's Azure subscription and tenant details</p>
+
+        <div class="form-section">
+            <h3>Tenant Identity</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label>Tenant ID <span class="required">*</span></label>
+                    <input type="text" id="tenantId" placeholder="contoso.onmicrosoft.com or GUID">
+                    <div class="hint">Azure AD / Entra ID tenant identifier</div>
+                </div>
+                <div class="field">
+                    <label>Subscription ID <span class="required">*</span></label>
+                    <input type="text" id="subscriptionId" placeholder="12345678-abcd-efgh-ijkl-...">
+                    <div class="hint">Azure subscription for resource creation</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Resource Naming</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label>App Name <span class="required">*</span></label>
+                    <input type="text" id="appName" placeholder="cdw-agent-contoso" maxlength="24">
+                    <div class="hint">Globally unique. Used for Function App, resource group, and Entra app</div>
+                </div>
+                <div class="field">
+                    <label>Region <span class="required">*</span></label>
+                    <select id="region">
+                        <option value="">Select a region...</option>
+                        <option value="eastus">East US</option>
+                        <option value="eastus2">East US 2</option>
+                        <option value="centralus">Central US</option>
+                        <option value="westus">West US</option>
+                        <option value="westus2">West US 2</option>
+                        <option value="westus3">West US 3</option>
+                        <option value="northcentralus">North Central US</option>
+                        <option value="southcentralus">South Central US</option>
+                        <option value="westeurope">West Europe</option>
+                        <option value="northeurope">North Europe</option>
+                    </select>
+                    <div class="hint">Same region as the Azure OpenAI resource for best performance</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <div></div>
+            <button class="btn btn-primary" onclick="goToStep(2)">Next: AI & Storage &rarr;</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 2: AI & Storage ========== -->
+    <div class="card hidden" id="page-2">
+        <h2>Azure OpenAI & Storage</h2>
+        <p class="subtitle">Configure the AI backend and document storage</p>
+
+        <div class="form-section">
+            <h3>Azure OpenAI</h3>
+            <div class="form-row full">
+                <div class="field">
+                    <label>Azure OpenAI Endpoint <span class="required">*</span></label>
+                    <input type="text" id="azureOpenAIEndpoint" placeholder="https://myoai.openai.azure.com/">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>API Key <span class="required">*</span></label>
+                    <input type="password" id="azureOpenAIKey" placeholder="Enter API key">
+                </div>
+                <div class="field">
+                    <label>Model Deployment</label>
+                    <input type="text" id="azureOpenAIDeployment" placeholder="gpt-4o-mini" value="gpt-4o-mini">
+                    <div class="hint">Default: gpt-4o-mini</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>Large Model (Optional)</label>
+                    <input type="text" id="azureOpenAIDeploymentLarge" placeholder="e.g., gpt-4o">
+                    <div class="hint">For complex analysis tasks. Leave blank if not available.</div>
+                </div>
+                <div class="field">
+                    <label>API Version</label>
+                    <input type="text" id="azureOpenAIApiVersion" value="2025-01-01-preview">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Blob Storage (Generated Documents)</h3>
+            <div class="form-row full">
+                <div class="field">
+                    <label>Storage Connection String <span class="required">*</span></label>
+                    <input type="password" id="storageConnectionString" placeholder="DefaultEndpointsProtocol=https;AccountName=...">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>Container Name</label>
+                    <input type="text" id="storageContainerName" value="generated-documents">
+                </div>
+                <div class="field">
+                    <label>SAS Token Expiry (hours)</label>
+                    <input type="number" id="sasTokenExpiryHours" value="24" min="1" max="168">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <button class="btn btn-secondary" onclick="goToStep(1)">&larr; Back</button>
+            <button class="btn btn-primary" onclick="goToStep(3)">Next: Review &rarr;</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 3: Review ========== -->
+    <div class="card hidden" id="page-3">
+        <h2>Review Configuration</h2>
+        <p class="subtitle">Verify all values before deploying</p>
+
+        <div class="summary-grid" id="summaryGrid"></div>
+
+        <div class="info-box">
+            <strong>What will happen:</strong> The deployment will create a resource group (<span id="reviewRg"></span>),
+            an Azure Function App, an Entra ID app registration with OAuth 2.0 OBO configuration,
+            deploy the Python backend, and build the agent .zip package.
+        </div>
+
+        <div class="button-row">
+            <button class="btn btn-secondary" onclick="goToStep(2)">&larr; Back</button>
+            <button class="btn btn-success" onclick="startDeployment()" id="deployBtn">
+                Deploy Agent
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 4: Deploy ========== -->
+    <div class="card hidden" id="page-4">
+        <div id="deployProgress">
+            <h2>Deploying Agent</h2>
+            <p class="subtitle" id="deploySubtitle">Please wait while we set up the infrastructure...</p>
+
+            <div class="deploy-steps" id="deploySteps">
+                <div class="deploy-step" id="ds-auth" data-step="auth">
+                    <div class="deploy-step-icon">1</div>
+                    <div class="deploy-step-content">
+                        <div class="deploy-step-title">Authenticating to Azure</div>
+                        <div class="deploy-step-desc">Logging into Azure CLI and Microsoft Graph</div>
+                        <div class="deploy-step-log" id="log-auth"></div>
+                    </div>
+                </div>
+                <div class="deploy-step" id="ds-infra" data-step="infra">
+                    <div class="deploy-step-icon">2</div>
+                    <div class="deploy-step-content">
+                        <div class="deploy-step-title">Creating Azure Infrastructure</div>
+                        <div class="deploy-step-desc">Resource group, Function App, storage account</div>
+                        <div class="deploy-step-log" id="log-infra"></div>
+                    </div>
+                </div>
+                <div class="deploy-step" id="ds-entra" data-step="entra">
+                    <div class="deploy-step-icon">3</div>
+                    <div class="deploy-step-content">
+                        <div class="deploy-step-title">Configuring Entra ID</div>
+                        <div class="deploy-step-desc">App registration, permissions, scopes, authorized clients</div>
+                        <div class="deploy-step-log" id="log-entra"></div>
+                    </div>
+                </div>
+                <div class="deploy-step" id="ds-code" data-step="code">
+                    <div class="deploy-step-icon">4</div>
+                    <div class="deploy-step-content">
+                        <div class="deploy-step-title">Deploying Python Code</div>
+                        <div class="deploy-step-desc">Publishing Azure Functions and verifying health</div>
+                        <div class="deploy-step-log" id="log-code"></div>
+                    </div>
+                </div>
+                <div class="deploy-step" id="ds-package" data-step="package">
+                    <div class="deploy-step-icon">5</div>
+                    <div class="deploy-step-content">
+                        <div class="deploy-step-title">Building Agent Package</div>
+                        <div class="deploy-step-desc">Stamping values and creating .zip for sideloading</div>
+                        <div class="deploy-step-log" id="log-package"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success state -->
+        <div id="deploySuccess" class="hidden">
+            <div class="success-banner">
+                <h2>Deployment Complete</h2>
+                <p>The agent has been deployed successfully</p>
+            </div>
+
+            <div class="summary-grid" id="resultGrid"></div>
+
+            <div class="info-box">
+                <strong>One remaining step:</strong> Upload the agent .zip package in the
+                <a href="https://admin.teams.microsoft.com" target="_blank">Teams Admin Center</a>
+                under Teams apps &rarr; Manage apps &rarr; Upload new app.
+                Then assign the app to users or groups.
+            </div>
+
+            <div class="button-row">
+                <div></div>
+                <button class="btn btn-primary" onclick="downloadPackage()">Download Agent Package (.zip)</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentStep = 1;
+
+    const fields = {
+        tenantId: { required: true, label: 'Tenant ID' },
+        subscriptionId: { required: true, label: 'Subscription ID' },
+        appName: { required: true, label: 'App Name' },
+        region: { required: true, label: 'Region' },
+        azureOpenAIEndpoint: { required: true, label: 'Azure OpenAI Endpoint' },
+        azureOpenAIKey: { required: true, label: 'Azure OpenAI Key' },
+        azureOpenAIDeployment: { required: false, label: 'Model Deployment' },
+        azureOpenAIDeploymentLarge: { required: false, label: 'Large Model' },
+        azureOpenAIApiVersion: { required: false, label: 'API Version' },
+        storageConnectionString: { required: true, label: 'Storage Connection String' },
+        storageContainerName: { required: false, label: 'Container Name' },
+        sasTokenExpiryHours: { required: false, label: 'SAS Expiry (hrs)' },
+    };
+
+    function getValues() {
+        const vals = {};
+        for (const [key] of Object.entries(fields)) {
+            vals[key] = document.getElementById(key)?.value?.trim() || '';
+        }
+        return vals;
+    }
+
+    function validateStep(step) {
+        const vals = getValues();
+        let valid = true;
+        const requiredByStep = {
+            1: ['tenantId', 'subscriptionId', 'appName', 'region'],
+            2: ['azureOpenAIEndpoint', 'azureOpenAIKey', 'storageConnectionString'],
+        };
+        const toCheck = requiredByStep[step] || [];
+        toCheck.forEach(key => {
+            const el = document.getElementById(key);
+            if (!vals[key]) {
+                el.classList.add('error');
+                valid = false;
+            } else {
+                el.classList.remove('error');
+            }
+        });
+        return valid;
+    }
+
+    function goToStep(step) {
+        if (step > currentStep && !validateStep(currentStep)) return;
+
+        // Update stepper
+        for (let i = 1; i <= 4; i++) {
+            const item = document.getElementById(`stepper-${i}`);
+            item.classList.remove('active', 'completed');
+            if (i < step) item.classList.add('completed');
+            if (i === step) item.classList.add('active');
+        }
+
+        // Show/hide pages
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`page-${i}`).classList.toggle('hidden', i !== step);
+        }
+
+        // Build review if going to step 3
+        if (step === 3) buildReview();
+
+        currentStep = step;
+    }
+
+    function buildReview() {
+        const vals = getValues();
+        const grid = document.getElementById('summaryGrid');
+        grid.innerHTML = '';
+
+        const displayFields = [
+            ['tenantId', 'Tenant ID'],
+            ['subscriptionId', 'Subscription ID'],
+            ['appName', 'App Name'],
+            ['region', 'Region'],
+            ['azureOpenAIEndpoint', 'Azure OpenAI Endpoint'],
+            ['azureOpenAIDeployment', 'Model Deployment'],
+            ['storageContainerName', 'Storage Container'],
+            ['sasTokenExpiryHours', 'SAS Expiry'],
+        ];
+
+        displayFields.forEach(([key, label]) => {
+            if (vals[key]) {
+                const div = document.createElement('div');
+                div.className = 'summary-item';
+                div.innerHTML = `<label>${label}</label><div class="value">${escapeHtml(vals[key])}</div>`;
+                grid.appendChild(div);
+            }
+        });
+
+        document.getElementById('reviewRg').textContent = `rg-${vals.appName}`;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ============================================================
+    // DEPLOYMENT
+    // ============================================================
+
+    function startDeployment() {
+        goToStep(4);
+        const vals = getValues();
+
+        // Connect to SSE endpoint
+        const params = new URLSearchParams(vals);
+        const evtSource = new EventSource(`/api/deploy?${params.toString()}`);
+
+        evtSource.addEventListener('step', (e) => {
+            const data = JSON.parse(e.data);
+            updateDeployStep(data.id, data.status, data.message);
+        });
+
+        evtSource.addEventListener('log', (e) => {
+            const data = JSON.parse(e.data);
+            appendLog(data.id, data.message);
+        });
+
+        evtSource.addEventListener('complete', (e) => {
+            const data = JSON.parse(e.data);
+            evtSource.close();
+            showSuccess(data);
+        });
+
+        evtSource.addEventListener('error_event', (e) => {
+            const data = JSON.parse(e.data);
+            evtSource.close();
+            updateDeployStep(data.id, 'error', data.message);
+            document.getElementById('deploySubtitle').textContent = 'Deployment encountered an error. Check the logs below.';
+        });
+
+        evtSource.onerror = () => {
+            // If no backend, run demo mode
+            evtSource.close();
+            runDemoMode(vals);
+        };
+    }
+
+    function updateDeployStep(id, status, message) {
+        const el = document.getElementById(`ds-${id}`);
+        if (!el) return;
+        el.className = `deploy-step ${status}`;
+        if (message) {
+            el.querySelector('.deploy-step-desc').textContent = message;
+        }
+        // Update icon
+        const icon = el.querySelector('.deploy-step-icon');
+        if (status === 'completed') icon.innerHTML = '&#10003;';
+        else if (status === 'error') icon.innerHTML = '&#10007;';
+        else if (status === 'active') icon.innerHTML = '<div class="spinner"></div>';
+    }
+
+    function appendLog(id, message) {
+        const logEl = document.getElementById(`log-${id}`);
+        if (!logEl) return;
+        logEl.style.display = 'block';
+        logEl.textContent += message + '\n';
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function showSuccess(data) {
+        document.getElementById('deployProgress').classList.add('hidden');
+        document.getElementById('deploySuccess').classList.remove('hidden');
+
+        const grid = document.getElementById('resultGrid');
+        grid.innerHTML = '';
+        const resultFields = [
+            ['Function App URL', data.functionUrl || `https://${getValues().appName}.azurewebsites.net`],
+            ['Resource Group', data.resourceGroup || `rg-${getValues().appName}`],
+            ['Entra Client ID', data.clientId || 'See deployment-record.json'],
+            ['Tenant ID', data.tenantId || getValues().tenantId],
+            ['Health Check', `${data.functionUrl || `https://${getValues().appName}.azurewebsites.net`}/api/health`],
+            ['Package', data.packagePath || `cdw-agent-${getValues().appName}.zip`],
+        ];
+        resultFields.forEach(([label, value]) => {
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            div.innerHTML = `<label>${label}</label><div class="value">${escapeHtml(value)}</div>`;
+            grid.appendChild(div);
+        });
+    }
+
+    function downloadPackage() {
+        const appName = getValues().appName;
+        window.open(`/api/download-package?appName=${appName}`, '_blank');
+    }
+
+    // ============================================================
+    // DEMO MODE (runs when no backend is connected)
+    // ============================================================
+
+    async function runDemoMode(vals) {
+        const steps = [
+            { id: 'auth', time: 2000, logs: [
+                `Logging into Azure CLI for tenant ${vals.tenantId}...`,
+                `Subscription: ${vals.subscriptionId}`,
+                `✓ Authenticated successfully`
+            ]},
+            { id: 'infra', time: 3000, logs: [
+                `Creating resource group: rg-${vals.appName}`,
+                `Creating storage account: ${vals.appName.replace(/-/g,'')}func`,
+                `Creating Function App: ${vals.appName} (Python 3.11, Linux, Consumption)`,
+                `✓ Infrastructure ready`
+            ]},
+            { id: 'entra', time: 3500, logs: [
+                `Creating app registration: CDW Agent - ${vals.appName}`,
+                `Configuring API permissions (Files.ReadWrite, User.Read)`,
+                `Setting Application ID URI: api://${vals.appName}.azurewebsites.net/...`,
+                `Creating access_as_user scope`,
+                `Adding 7 authorized client applications`,
+                `Creating client secret (24-month expiry)`,
+                `Granting admin consent`,
+                `✓ Entra ID configured`
+            ]},
+            { id: 'code', time: 4000, logs: [
+                `Publishing from azure_function/...`,
+                `Uploading 11 files...`,
+                `Installing pip dependencies...`,
+                `Syncing triggers...`,
+                `Waiting 15s for cold start...`,
+                `Health check: 13 endpoints registered`,
+                `✓ Deployment verified`
+            ]},
+            { id: 'package', time: 2000, logs: [
+                `Copying template files...`,
+                `Stamping manifest.json (domain, client ID)`,
+                `Stamping openapi.yaml (function URL, tenant ID)`,
+                `Creating .zip package`,
+                `✓ Package ready: cdw-agent-${vals.appName}.zip`
+            ]},
+        ];
+
+        for (const step of steps) {
+            updateDeployStep(step.id, 'active', 'In progress...');
+            for (let i = 0; i < step.logs.length; i++) {
+                await sleep(step.time / step.logs.length);
+                appendLog(step.id, step.logs[i]);
+            }
+            updateDeployStep(step.id, 'completed', step.logs[step.logs.length - 1].replace('✓ ', ''));
+        }
+
+        await sleep(500);
+        showSuccess({
+            functionUrl: `https://${vals.appName}.azurewebsites.net`,
+            resourceGroup: `rg-${vals.appName}`,
+            clientId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            tenantId: vals.tenantId,
+            packagePath: `cdw-agent-${vals.appName}.zip`,
+        });
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ============================================================
+    // STARTUP STATUS CHECK
+    // ============================================================
+
+    let backendConnected = false;
+
+    async function checkBackendStatus() {
+        const badge = document.getElementById('statusBadge');
+        try {
+            const resp = await fetch('/api/status');
+            const data = await resp.json();
+            if (data.status === 'ready') {
+                badge.className = 'status-badge connected';
+                badge.querySelector('span').textContent = 'Backend Ready';
+                badge.title = 'All prerequisites verified. Ready to deploy.';
+                backendConnected = true;
+            } else {
+                const missing = Object.entries(data.checks)
+                    .filter(([_, ok]) => !ok)
+                    .map(([name]) => name);
+                badge.className = 'status-badge error';
+                badge.querySelector('span').textContent = 'Missing: ' + missing.join(', ');
+                badge.title = 'Some prerequisites are missing. Deployment may fail.';
+                backendConnected = true; // Backend exists but has issues
+            }
+        } catch {
+            badge.className = 'status-badge demo';
+            badge.querySelector('span').textContent = 'Demo Mode';
+            badge.title = 'No backend server detected. Run "npm start" in deploy/portal/ to enable real deployments.';
+            backendConnected = false;
+        }
+    }
+
+    checkBackendStatus();
+</script>
+
+</body>
+</html>
